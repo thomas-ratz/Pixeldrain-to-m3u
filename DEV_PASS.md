@@ -38,3 +38,21 @@
 - Expand test coverage (API error handling, CLI argument parsing)
 - Add configurable logging levels and optional structured logs
 
+## Pass 3 – 2025-11-19
+
+### Completed
+- Implemented One Pace scraper that selects the highest-quality English subtitle Pixeldrain link per arc
+- Added playlist entry struct, IPTV-friendly metadata (group-title/tvg-name), and enhanced CLI flags (`--onepace`, `--arc-filter`)
+- Updated README docs, dependency metadata, and expanded pytest coverage (playlist rendering + One Pace parsing)
+
+### In Progress
+- None
+
+### Not Started / Future Work
+- Network retries/backoff for both One Pace and Pixeldrain HTTP calls
+- Local caching of One Pace HTML to reduce load and speed up repeated runs
+- CLI UX polish (progress bars, selective arc ranges, JSON export)
+
+### Next Pass Goals
+- Add integration tests that stub HTTP responses for One Pace + Pixeldrain
+- Introduce retry/session pooling for the scraper clients

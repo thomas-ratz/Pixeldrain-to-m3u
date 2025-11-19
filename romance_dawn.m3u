@@ -1,10 +1,10 @@
 #EXTM3U
-# Pixeldrain List: [1-7] Romance Dawn [En Sub][1080p]
-#EXTINF:-1,[One Pace][1] Romance Dawn 01 [1080p][En Sub][A7CD5338].mp4
+# Playlist: One Pace – English Subtitles
+#EXTINF:-1 group-title="Romance Dawn" tvg-name="[One Pace][1] Romance Dawn 01 [1080p][En Sub][A7CD5338].mp4",Romance Dawn • [One Pace][1] Romance Dawn 01 [1080p][En Sub][A7CD5338].mp4
 https://pixeldrain.net/api/file/3Yuxg9Y9?download
-#EXTINF:-1,[One Pace][2] Romance Dawn 02 [1080p][En Sub][4F30E808].mp4
+#EXTINF:-1 group-title="Romance Dawn" tvg-name="[One Pace][2] Romance Dawn 02 [1080p][En Sub][4F30E808].mp4",Romance Dawn • [One Pace][2] Romance Dawn 02 [1080p][En Sub][4F30E808].mp4
 https://pixeldrain.net/api/file/HuJLDxtR?download
-#EXTINF:-1,[One Pace][3-5] Romance Dawn 03 [1080p][En Sub][91AE2590].mp4
+#EXTINF:-1 group-title="Romance Dawn" tvg-name="[One Pace][3-5] Romance Dawn 03 [1080p][En Sub][91AE2590].mp4",Romance Dawn • [One Pace][3-5] Romance Dawn 03 [1080p][En Sub][91AE2590].mp4
 https://pixeldrain.net/api/file/j1nEDCfX?download
-#EXTINF:-1,[One Pace][5-7] Romance Dawn 04 [1080p][En Sub][74E6BE9D].mp4
+#EXTINF:-1 group-title="Romance Dawn" tvg-name="[One Pace][5-7] Romance Dawn 04 [1080p][En Sub][74E6BE9D].mp4",Romance Dawn • [One Pace][5-7] Romance Dawn 04 [1080p][En Sub][74E6BE9D].mp4
 https://pixeldrain.net/api/file/fzhDZx9N?download

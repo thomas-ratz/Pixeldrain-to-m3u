@@ -30,12 +30,22 @@ pip install -e .
 
 ## Usage
 
-```powershell
-# Via module invocation
-python -m pixeldrain_m3u https://pixeldrain.net/l/VmpS467P -o romance_dawn.m3u
+### Single Pixeldrain list
 
-# Or via the console script after installation
-pixeldrain-m3u https://pixeldrain.net/l/VmpS467P --overwrite
+```powershell
+python -m pixeldrain_m3u https://pixeldrain.net/l/VmpS467P -o romance_dawn.m3u
+# or, once installed:
+pixeldrain-m3u VmpS467P --overwrite
+```
+
+### One Pace auto-scrape
+
+```powershell
+# Grab every arc (best English-sub Pixeldrain link) and stitch into one playlist
+python -m pixeldrain_m3u --onepace https://onepace.net/en/watch -o onepace_all.m3u
+
+# Use defaults (One Pace watch URL) and limit to arcs containing "Wano" or "Dressrosa"
+pixeldrain-m3u --onepace --arc-filter Wano --arc-filter Dressrosa -o favorites.m3u
 ```
 
 Key flags:
@@ -43,8 +53,10 @@ Key flags:
 - `--output`: destination file (default `playlist.m3u`)
 - `--base-url`: point at a Pixeldrain mirror or self-host
 - `--overwrite`: replace an existing playlist file
+- `--onepace`: interpret `source` as a One Pace watch page (or omit to use the default page)
+- `--arc-filter`: repeatable filter that keeps arcs whose title contains the provided text
 
-You can also pass a raw list ID instead of the full URL. The CLI honors `PIXELDRAIN_BASE_URL` so you can globally override the domain.
+You can pass a raw list ID instead of a full Pixeldrain URL, and the CLI honors `PIXELDRAIN_BASE_URL` so you can globally override the domain. In One Pace mode, each playlist entry is grouped by arc (`group-title`) and prepends the arc name in the title, matching common IPTV playlist conventions.
 
 ## Tests
 

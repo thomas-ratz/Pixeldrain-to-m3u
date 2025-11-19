@@ -1,4 +1,3 @@
-from pixeldrain_m3u import cli
 from pixeldrain_m3u.api import extract_list_id, normalize_base_url
 
 

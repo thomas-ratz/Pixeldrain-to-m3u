@@ -2,28 +2,44 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Mapping, Sequence
 
-from .api import compose_download_url
 from .log_utils import log
 
 
-def render_m3u(files: Sequence[dict], base_url: str, title: str | None = None) -> str:
-    """Generate M3U content for the provided files."""
-    if not files:
-        raise ValueError("Cannot render a playlist for an empty file list")
+@dataclass(frozen=True)
+class PlaylistEntry:
+    """Represents a single EXTINF + URL pair."""
+
+    title: str
+    url: str
+    duration: int = -1
+    attrs: Mapping[str, str] | None = None
+
+
+def render_playlist(entries: Sequence[PlaylistEntry], title: str | None = None) -> str:
+    """Render an M3U playlist from structured entries."""
+    if not entries:
+        raise ValueError("Cannot render a playlist with zero entries")
 
     lines: list[str] = ["#EXTM3U"]
     if title:
-        lines.append(f"# Pixeldrain List: {title}")
+        lines.append(f"# Playlist: {title}")
 
-    for index, file_info in enumerate(files, start=1):
-        file_name = file_info.get("name") or f"Pixeldrain File {index}"
-        download_url = compose_download_url(file_info["id"], base_url)
-        duration = file_info.get("duration", -1)
-        lines.append(f"#EXTINF:{duration},{file_name}")
-        lines.append(download_url)
+    for entry in entries:
+        attr_text = ""
+        if entry.attrs:
+            formatted: list[str] = []
+            for key, value in sorted(entry.attrs.items()):
+                if value is None:
+                    continue
+                safe_value = str(value).replace('"', "'")
+                formatted.append(f'{key}="{safe_value}"')
+            attr_text = " " + " ".join(formatted)
+        lines.append(f"#EXTINF:{entry.duration}{attr_text},{entry.title}")
+        lines.append(entry.url)
 
     return "\n".join(lines) + "\n"
 

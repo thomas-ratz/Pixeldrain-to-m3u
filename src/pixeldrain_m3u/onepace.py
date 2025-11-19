@@ -1,0 +1,152 @@
+"""Scraper for One Pace watch pages."""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from typing import List, Sequence
+
+import requests
+from bs4 import BeautifulSoup
+
+from .api import compose_download_url, extract_list_id, fetch_list_payload
+from .constants import DEFAULT_ONEPACE_WATCH_URL
+from .log_utils import log
+from .playlist import PlaylistEntry
+
+
+QUALITY_PATTERN = re.compile(r"(\d{3,4})p")
+
+
+@dataclass(frozen=True)
+class OnePaceLink:
+    """Represents a Pixeldrain link exposed on the One Pace site."""
+
+    label: str
+    href: str
+
+
+@dataclass(frozen=True)
+class OnePaceArc:
+    """Structured data for a One Pace arc entry."""
+
+    title: str
+    description: str | None
+    english_subtitles: Sequence[OnePaceLink]
+
+
+def fetch_watch_page(url: str = DEFAULT_ONEPACE_WATCH_URL) -> str:
+    """Retrieve the One Pace watch page HTML."""
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+    return response.text
+
+
+def parse_watch_page(html: str) -> List[OnePaceArc]:
+    """Parse One Pace HTML into structured arc data."""
+    soup = BeautifulSoup(html, "html.parser")
+    arcs: List[OnePaceArc] = []
+    for arc_li in soup.select("main ol > li"):
+        heading = arc_li.find("h2")
+        if not heading:
+            continue
+        title = heading.get_text(" ", strip=True)
+        description = None
+        description_candidate = heading.find_next("p")
+        if description_candidate and description_candidate.parent is heading.parent:
+            description = description_candidate.get_text(" ", strip=True)
+
+        english_links = _extract_english_subtitles(arc_li)
+        arcs.append(OnePaceArc(title=title, description=description, english_subtitles=english_links))
+    return arcs
+
+
+def _extract_english_subtitles(arc_li) -> List[OnePaceLink]:
+    languages_container = arc_li.find("ul", class_=lambda c: c and "space-y-6" in c)
+    if not languages_container:
+        return []
+
+    for language_li in languages_container.find_all("li", recursive=False):
+        label_block = language_li.find("span")
+        if not label_block:
+            continue
+        label_text = label_block.get_text(" ", strip=True)
+        if "English Subtitles" not in label_text:
+            continue
+        link_ul = language_li.find("ul", class_=lambda c: c and "flex" in c)
+        if not link_ul:
+            continue
+        links: List[OnePaceLink] = []
+        for anchor in link_ul.find_all("a", href=True):
+            href = anchor["href"]
+            if "pixeldrain.net" not in href:
+                continue
+            label = anchor.get_text(" ", strip=True)
+            links.append(OnePaceLink(label=label, href=href))
+        return links
+    return []
+
+
+def select_best_quality(links: Sequence[OnePaceLink]) -> OnePaceLink | None:
+    """Pick the highest resolution available link."""
+    if not links:
+        return None
+
+    def score(link: OnePaceLink) -> tuple[int, str]:
+        match = QUALITY_PATTERN.search(link.label)
+        numeric = int(match.group(1)) if match else 0
+        return (numeric, link.label)
+
+    return max(links, key=score)
+
+
+def arc_matches_filters(title: str, filters: Sequence[str] | None) -> bool:
+    if not filters:
+        return True
+    lower_title = title.lower()
+    return any(filt.lower() in lower_title for filt in filters)
+
+
+def build_onepace_entries(
+    *,
+    watch_url: str | None,
+    base_url: str,
+    arc_filters: Sequence[str] | None = None,
+) -> list[PlaylistEntry]:
+    """Fetch arcs from One Pace and convert them into playlist entries."""
+    resolved_watch_url = (watch_url or DEFAULT_ONEPACE_WATCH_URL).strip() or DEFAULT_ONEPACE_WATCH_URL
+    html = fetch_watch_page(resolved_watch_url)
+    arcs = parse_watch_page(html)
+    entries: list[PlaylistEntry] = []
+
+    for arc in arcs:
+        if not arc_matches_filters(arc.title, arc_filters):
+            continue
+        best_link = select_best_quality(arc.english_subtitles)
+        if not best_link:
+            log(f"Skipping arc '{arc.title}' (no English subtitle links found)")
+            continue
+
+        list_id = extract_list_id(best_link.href)
+        payload = fetch_list_payload(list_id, base_url)
+        files = payload.get("files") or []
+        if not files:
+            log(f"Skipping arc '{arc.title}' (Pixeldrain list '{list_id}' empty)")
+            continue
+
+        for file_info in files:
+            file_name = file_info.get("name") or file_info.get("id")
+            if not file_name:
+                continue
+            url = compose_download_url(file_info["id"], base_url)
+            attrs = {
+                "group-title": arc.title,
+                "tvg-name": file_name,
+            }
+            entry_title = f"{arc.title} • {file_name}"
+            entries.append(PlaylistEntry(title=entry_title, url=url, attrs=attrs))
+
+    if not entries:
+        raise RuntimeError("No playable entries were discovered from One Pace.")
+    return entries
+

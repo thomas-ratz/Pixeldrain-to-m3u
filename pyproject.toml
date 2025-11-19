@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Jaste Project" }]
 license = { text = "MIT" }
-dependencies = ["requests>=2.32,<3"]
+dependencies = ["requests>=2.32,<3", "beautifulsoup4>=4.14,<5"]
 keywords = ["pixeldrain", "m3u", "playlist", "scraper"]
 
 [project.scripts]
