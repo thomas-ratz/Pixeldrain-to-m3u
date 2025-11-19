@@ -1,0 +1,18 @@
+# Python artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Tooling
+.mypy_cache/
+.ruff_cache/
+src/pixeldrain_m3u.egg-info/
+
+# Local files
+sample_romance.m3u
+*.log
+

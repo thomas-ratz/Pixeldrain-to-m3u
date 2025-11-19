@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pixeldrain-m3u"
+version = "0.1.0"
+description = "Scrape Pixeldrain list metadata and emit M3U playlists."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Jaste Project" }]
+license = { text = "MIT" }
+dependencies = ["requests>=2.32,<3"]
+keywords = ["pixeldrain", "m3u", "playlist", "scraper"]
+
+[project.scripts]
+pixeldrain-m3u = "pixeldrain_m3u.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
