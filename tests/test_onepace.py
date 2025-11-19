@@ -1,4 +1,9 @@
-from pixeldrain_m3u.onepace import OnePaceLink, parse_watch_page, select_best_quality
+from pixeldrain_m3u.onepace import (
+    OnePaceLink,
+    format_series_metadata,
+    parse_watch_page,
+    select_best_quality,
+)
 
 SAMPLE_HTML = """
 <html>
@@ -53,4 +58,38 @@ def test_select_best_quality_prefers_highest_resolution():
 
     assert best is not None
     assert best.href.endswith("CCC")
+
+
+def test_format_series_metadata_builds_tvg_fields():
+    title, attrs = format_series_metadata(
+        series_prefix="",
+        group_title="One Pace",
+        tvg_logo="http://logo.png",
+        tvg_prefix="onepace-",
+        arc_title="Romance Dawn",
+        season_index=1,
+        episode_index=3,
+    )
+
+    assert title == "Romance Dawn E03"
+    assert attrs["group-title"] == "One Pace"
+    assert attrs["tvg-name"] == "Romance Dawn E03"
+    assert attrs["tvg-logo"] == "http://logo.png"
+    assert attrs["tvg-id"] == "onepace-E03"
+
+
+def test_format_series_metadata_allows_prefix():
+    title, attrs = format_series_metadata(
+        series_prefix="Custom",
+        group_title="Custom Group",
+        tvg_logo=None,
+        tvg_prefix=None,
+        arc_title="Arc",
+        season_index=2,
+        episode_index=1,
+    )
+
+    assert title == "Custom Arc E01"
+    assert attrs["tvg-name"] == "Custom Arc E01"
+    assert attrs["group-title"] == "Custom Group"
 

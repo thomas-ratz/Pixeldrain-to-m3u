@@ -56,3 +56,41 @@
 ### Next Pass Goals
 - Add integration tests that stub HTTP responses for One Pace + Pixeldrain
 - Introduce retry/session pooling for the scraper clients
+
+## Pass 4 – 2025-11-19
+
+### Completed
+- Added series-aware metadata formatting (season/episode numbering, tvg-name/tvg-logo/tvg-id support)
+- Introduced CLI overrides for series name/group/logo/tvg-id prefix to mirror IPTV series semantics
+- Documented the workflow updates and added new tests covering metadata formatting
+
+### In Progress
+- None
+
+### Not Started / Future Work
+- Smarter episode number extraction from filenames (beyond sequential ordering)
+- Optional per-arc artwork ingestion for `tvg-logo`
+- Player-specific playlist exports (e.g., JSON or XMLTV)
+
+### Next Pass Goals
+- Capture episode numbering directly from Pixeldrain filenames when available
+- Add CLI option to emit multiple playlist files (one per arc/season)
+
+## Pass 5 – 2025-11-19
+
+### Completed
+- Added `--mode` flag supporting `m3u` (default) and `m3u8` outputs, plus an HLS renderer that uses tags from the Mux reference (`#EXT-X-VERSION`, `#EXTINF`, `#EXT-X-DATERANGE`, `#EXT-X-ENDLIST`)
+- Simplified One Pace naming to `Romance Dawn E01` (no season metadata) so IPTV clients classify entries as series/VOD
+- Updated README/tests to reflect the new format and ensured attribute ordering matches common IPTV expectations
+
+### In Progress
+- None
+
+### Not Started / Future Work
+- Investigate deriving durations (for more accurate `#EXTINF`/`#EXT-X-TARGETDURATION`)
+- Explore multi-quality variant generation for future adaptive streaming mode
+- Consider exporting companion metadata (JSON/XMLTV) for richer clients
+
+### Next Pass Goals
+- Integrate actual durations if available (ffprobe or Pixeldrain metadata)
+- Add validation to ensure `--mode m3u8` output passes HLS linters

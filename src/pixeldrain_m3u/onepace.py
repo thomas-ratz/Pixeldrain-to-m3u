@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .api import compose_download_url, extract_list_id, fetch_list_payload
-from .constants import DEFAULT_ONEPACE_WATCH_URL
+from .constants import DEFAULT_ONEPACE_WATCH_URL, DEFAULT_SERIES_GROUP, DEFAULT_SERIES_NAME
 from .log_utils import log
 from .playlist import PlaylistEntry
 
@@ -112,14 +112,20 @@ def build_onepace_entries(
     watch_url: str | None,
     base_url: str,
     arc_filters: Sequence[str] | None = None,
+    series_name: str | None = None,
+    series_group: str | None = None,
+    series_logo: str | None = None,
+    tvg_prefix: str | None = None,
 ) -> list[PlaylistEntry]:
     """Fetch arcs from One Pace and convert them into playlist entries."""
     resolved_watch_url = (watch_url or DEFAULT_ONEPACE_WATCH_URL).strip() or DEFAULT_ONEPACE_WATCH_URL
     html = fetch_watch_page(resolved_watch_url)
     arcs = parse_watch_page(html)
     entries: list[PlaylistEntry] = []
+    series_prefix = (series_name or DEFAULT_SERIES_NAME).strip()
+    normalized_group_title = (series_group or DEFAULT_SERIES_GROUP).strip() or DEFAULT_SERIES_GROUP
 
-    for arc in arcs:
+    for season_index, arc in enumerate(arcs, start=1):
         if not arc_matches_filters(arc.title, arc_filters):
             continue
         best_link = select_best_quality(arc.english_subtitles)
@@ -134,19 +140,49 @@ def build_onepace_entries(
             log(f"Skipping arc '{arc.title}' (Pixeldrain list '{list_id}' empty)")
             continue
 
-        for file_info in files:
+        for episode_index, file_info in enumerate(files, start=1):
             file_name = file_info.get("name") or file_info.get("id")
             if not file_name:
                 continue
             url = compose_download_url(file_info["id"], base_url)
-            attrs = {
-                "group-title": arc.title,
-                "tvg-name": file_name,
-            }
-            entry_title = f"{arc.title} • {file_name}"
+            entry_title, attrs = format_series_metadata(
+                series_prefix=series_prefix,
+                group_title=normalized_group_title,
+                tvg_logo=series_logo,
+                tvg_prefix=tvg_prefix,
+                arc_title=arc.title,
+                season_index=season_index,
+                episode_index=episode_index,
+            )
             entries.append(PlaylistEntry(title=entry_title, url=url, attrs=attrs))
 
     if not entries:
         raise RuntimeError("No playable entries were discovered from One Pace.")
     return entries
+
+
+def format_series_metadata(
+    *,
+    series_prefix: str,
+    group_title: str,
+    tvg_logo: str | None,
+    tvg_prefix: str | None,
+    arc_title: str,
+    season_index: int,  # kept for potential future numbering logic
+    episode_index: int,
+) -> tuple[str, dict[str, str]]:
+    """Create IPTV-friendly metadata for a playlist entry."""
+    episode_label = f"E{episode_index:02d}"
+    display_title = f"{arc_title} {episode_label}"
+    if series_prefix:
+        display_title = f"{series_prefix} {display_title}"
+    attrs: dict[str, str] = {
+        "group-title": group_title,
+        "tvg-name": display_title,
+    }
+    if tvg_logo:
+        attrs["tvg-logo"] = tvg_logo
+    if tvg_prefix is not None:
+        attrs["tvg-id"] = f"{tvg_prefix}{episode_label}"
+    return display_title, attrs
 
