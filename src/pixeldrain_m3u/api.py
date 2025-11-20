@@ -55,5 +55,5 @@ def compose_download_url(file_id: str, base_url: str) -> str:
     """Build a direct download URL for a Pixeldrain file."""
     if not file_id:
         raise ValueError("file_id cannot be empty")
-    return f"{base_url}/api/file/{file_id}"
+    return f"{base_url}/api/file/{file_id}?download"
 

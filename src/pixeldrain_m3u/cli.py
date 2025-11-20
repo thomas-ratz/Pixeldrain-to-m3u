@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Sequence
 
 from .api import compose_download_url, extract_list_id, fetch_list_payload, normalize_base_url
-from .constants import DEFAULT_SERIES_GROUP, DEFAULT_SERIES_NAME
+from .constants import DEFAULT_SERIES_GROUP, DEFAULT_SERIES_LOGO, DEFAULT_SERIES_NAME
 from .log_utils import log
 from .onepace import build_onepace_entries
 from .playlist import PlaylistEntry, render_m3_playlist, render_m3u8_playlist, write_playlist
@@ -67,13 +67,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--series-group",
-        default=DEFAULT_SERIES_GROUP,
-        help="(One Pace only) override the IPTV group-title value (default: %(default)s).",
+        default=None,
+        help="(One Pace only) override the arc name used in group-title (defaults to each arc title).",
     )
     parser.add_argument(
         "--series-logo",
         default=None,
-        help="(One Pace only) optional logo URL injected as tvg-logo.",
+        help="(One Pace only) optional logo URL injected as tvg-logo (default: One Piece logo).",
     )
     parser.add_argument(
         "--tvg-prefix",

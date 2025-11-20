@@ -56,12 +56,12 @@ Key flags:
 - `--onepace`: interpret `source` as a One Pace watch page (or omit to use the default page)
 - `--arc-filter`: repeatable filter that keeps arcs whose title contains the provided text
 - `--mode`: `m3u` (default) for extended M3U, `m3u8` for a VOD-style HLS manifest
-- `--series-name`: optional prefix for episode titles (blank by default)
+- `--series-name`: optional prefix for episode titles (default `One Pace`, producing `One Pace S01 E01`)
 - `--series-group`: override the IPTV `group-title` value (default `One Pace`)
-- `--series-logo`: supply a poster URL for IPTV apps (`tvg-logo`)
+- `--series-logo`: override the default One Piece logo used for `tvg-logo`
 - `--tvg-prefix`: assign deterministic `tvg-id`s, e.g. `--tvg-prefix onepace-`
 
-You can pass a raw list ID instead of a full Pixeldrain URL, and the CLI honors `PIXELDRAIN_BASE_URL` so you can globally override the domain. In One Pace mode, each playlist entry is labeled like `Romance Dawn E01` with `group-title="One Pace"` so IPTV players treat it as a series; the `m3u8` mode mirrors the same metadata using standard HLS tags (`#EXTINF`, `#EXT-X-DATERANGE`, etc.).
+You can pass a raw list ID instead of a full Pixeldrain URL, and the CLI honors `PIXELDRAIN_BASE_URL` so you can globally override the domain. In One Pace mode, each playlist entry follows the IPTV series pattern (`tvg-id="" tvg-name="One Pace S01 E01" tvg-logo="<One Piece logo>" group-title="One Pace"`) so players classify it as VOD, and the `m3u8` mode mirrors the same metadata using standard HLS tags (`#EXTINF`, `#EXT-X-DATERANGE`, etc.).
 
 ## Tests
 

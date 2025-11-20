@@ -82,6 +82,7 @@
 - Added `--mode` flag supporting `m3u` (default) and `m3u8` outputs, plus an HLS renderer that uses tags from the Mux reference (`#EXT-X-VERSION`, `#EXTINF`, `#EXT-X-DATERANGE`, `#EXT-X-ENDLIST`)
 - Simplified One Pace naming to `Romance Dawn E01` (no season metadata) so IPTV clients classify entries as series/VOD
 - Updated README/tests to reflect the new format and ensured attribute ordering matches common IPTV expectations
+- Introduced the default One Piece `tvg-logo` and enforced the exact `Episode Sxx Exx` + `group-title="<Arc> Sxx"` IPTV naming pattern with `tvg-id=""` when no prefix is provided
 
 ### In Progress
 - None

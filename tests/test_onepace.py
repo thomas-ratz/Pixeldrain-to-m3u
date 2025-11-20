@@ -62,34 +62,33 @@ def test_select_best_quality_prefers_highest_resolution():
 
 def test_format_series_metadata_builds_tvg_fields():
     title, attrs = format_series_metadata(
-        series_prefix="",
+        series_prefix="One Pace",
         group_title="One Pace",
         tvg_logo="http://logo.png",
         tvg_prefix="onepace-",
-        arc_title="Romance Dawn",
         season_index=1,
         episode_index=3,
     )
 
-    assert title == "Romance Dawn E03"
+    assert title == "One Pace S01 E03"
     assert attrs["group-title"] == "One Pace"
-    assert attrs["tvg-name"] == "Romance Dawn E03"
+    assert attrs["tvg-name"] == "One Pace S01 E03"
     assert attrs["tvg-logo"] == "http://logo.png"
-    assert attrs["tvg-id"] == "onepace-E03"
+    assert attrs["tvg-id"] == "onepace-S01E03"
 
 
 def test_format_series_metadata_allows_prefix():
     title, attrs = format_series_metadata(
         series_prefix="Custom",
-        group_title="Custom Group",
+        group_title="Custom",
         tvg_logo=None,
         tvg_prefix=None,
-        arc_title="Arc",
         season_index=2,
         episode_index=1,
     )
 
-    assert title == "Custom Arc E01"
-    assert attrs["tvg-name"] == "Custom Arc E01"
-    assert attrs["group-title"] == "Custom Group"
+    assert title == "Custom S02 E01"
+    assert attrs["tvg-name"] == "Custom S02 E01"
+    assert attrs["group-title"] == "Custom"
+    assert attrs["tvg-id"] == ""
 

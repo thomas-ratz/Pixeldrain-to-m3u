@@ -10,7 +10,12 @@ import requests
 from bs4 import BeautifulSoup
 
 from .api import compose_download_url, extract_list_id, fetch_list_payload
-from .constants import DEFAULT_ONEPACE_WATCH_URL, DEFAULT_SERIES_GROUP, DEFAULT_SERIES_NAME
+from .constants import (
+    DEFAULT_ONEPACE_WATCH_URL,
+    DEFAULT_SERIES_GROUP,
+    DEFAULT_SERIES_LOGO,
+    DEFAULT_SERIES_NAME,
+)
 from .log_utils import log
 from .playlist import PlaylistEntry
 
@@ -122,8 +127,9 @@ def build_onepace_entries(
     html = fetch_watch_page(resolved_watch_url)
     arcs = parse_watch_page(html)
     entries: list[PlaylistEntry] = []
-    series_prefix = (series_name or DEFAULT_SERIES_NAME).strip()
-    normalized_group_title = (series_group or DEFAULT_SERIES_GROUP).strip() or DEFAULT_SERIES_GROUP
+    series_prefix = (series_name or "One Pace").strip() or "One Pace"
+    group_value = (series_group or "One Pace").strip() or "One Pace"
+    logo_value = DEFAULT_SERIES_LOGO if series_logo is None else series_logo
 
     for season_index, arc in enumerate(arcs, start=1):
         if not arc_matches_filters(arc.title, arc_filters):
@@ -147,10 +153,9 @@ def build_onepace_entries(
             url = compose_download_url(file_info["id"], base_url)
             entry_title, attrs = format_series_metadata(
                 series_prefix=series_prefix,
-                group_title=normalized_group_title,
-                tvg_logo=series_logo,
+                group_title=group_value,
+                tvg_logo=logo_value,
                 tvg_prefix=tvg_prefix,
-                arc_title=arc.title,
                 season_index=season_index,
                 episode_index=episode_index,
             )
@@ -167,22 +172,21 @@ def format_series_metadata(
     group_title: str,
     tvg_logo: str | None,
     tvg_prefix: str | None,
-    arc_title: str,
-    season_index: int,  # kept for potential future numbering logic
+    season_index: int,
     episode_index: int,
 ) -> tuple[str, dict[str, str]]:
     """Create IPTV-friendly metadata for a playlist entry."""
+    season_label = f"S{season_index:02d}"
     episode_label = f"E{episode_index:02d}"
-    display_title = f"{arc_title} {episode_label}"
-    if series_prefix:
-        display_title = f"{series_prefix} {display_title}"
+    tvg_title = f"{series_prefix} {season_label} {episode_label}"
+
     attrs: dict[str, str] = {
+        "tvg-id": "",
+        "tvg-name": tvg_title,
+        "tvg-logo": tvg_logo or "",
         "group-title": group_title,
-        "tvg-name": display_title,
     }
-    if tvg_logo:
-        attrs["tvg-logo"] = tvg_logo
-    if tvg_prefix is not None:
-        attrs["tvg-id"] = f"{tvg_prefix}{episode_label}"
-    return display_title, attrs
+    if tvg_prefix:
+        attrs["tvg-id"] = f"{tvg_prefix}{season_label}{episode_label}"
+    return tvg_title, attrs
 
