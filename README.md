@@ -11,7 +11,9 @@ Automate the creation of an `m3u` playlist from a Pixeldrain share link. The pac
 ├─ output/               # Generated playlists (git-ignored)
 ├─ README.md             # This file
 ├─ DEV_PASS.md           # Development pass journal
-└─ pyproject.toml        # Project metadata & dependencies
+├─ pyproject.toml        # Project metadata & dependencies
+├─ requirements.txt      # Shorthand: installs the package in editable mode
+└─ requirements-dev.txt  # Shorthand: installs with dev/test extras
 ```
 
 ## Setup
@@ -19,14 +21,8 @@ Automate the creation of an `m3u` playlist from a Pixeldrain share link. The pac
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt        # runtime
-pip install -r requirements-dev.txt    # optional: dev/test tooling
-```
-
-The package can also be installed directly:
-
-```powershell
-pip install -e .
+pip install -e .          # runtime
+pip install -e ".[dev]"   # optional: dev/test tooling (pytest)
 ```
 
 ## Usage
