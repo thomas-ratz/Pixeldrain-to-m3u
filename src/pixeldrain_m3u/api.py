@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
@@ -39,7 +39,7 @@ def extract_list_id(source: str) -> str:
     return candidate
 
 
-def fetch_list_payload(list_id: str, base_url: str) -> Dict[str, Any]:
+def fetch_list_payload(list_id: str, base_url: str) -> dict[str, Any]:
     """Retrieve Pixeldrain list metadata."""
     url = f"{base_url}/api/list/{list_id}"
     log(f"Requesting list metadata from {url}")

@@ -8,6 +8,7 @@ Automate the creation of an `m3u` playlist from a Pixeldrain share link. The pac
 .
 ├─ src/pixeldrain_m3u/   # Package code (API helpers, playlist utils, CLI)
 ├─ tests/                # Pytest suite
+├─ output/               # Generated playlists (git-ignored)
 ├─ README.md             # This file
 ├─ DEV_PASS.md           # Development pass journal
 └─ pyproject.toml        # Project metadata & dependencies
@@ -33,7 +34,7 @@ pip install -e .
 ### Single Pixeldrain list
 
 ```powershell
-python -m pixeldrain_m3u https://pixeldrain.net/l/VmpS467P -o romance_dawn.m3u
+python -m pixeldrain_m3u https://pixeldrain.net/l/VmpS467P -o output/romance_dawn.m3u
 # or, once installed:
 pixeldrain-m3u VmpS467P --overwrite
 ```
@@ -42,15 +43,15 @@ pixeldrain-m3u VmpS467P --overwrite
 
 ```powershell
 # Grab every arc (best English-sub Pixeldrain link) and stitch into one playlist
-python -m pixeldrain_m3u --onepace https://onepace.net/en/watch --mode m3u -o onepace_all.m3u
+python -m pixeldrain_m3u --onepace https://onepace.net/en/watch --mode m3u -o output/onepace_all.m3u
 
 # Use defaults (One Pace watch URL) and limit to arcs containing "Wano" or "Dressrosa"
-pixeldrain-m3u --onepace --arc-filter Wano --arc-filter Dressrosa --mode m3u8 -o favorites.m3u8
+pixeldrain-m3u --onepace --arc-filter Wano --arc-filter Dressrosa --mode m3u8 -o output/favorites.m3u8
 ```
 
 Key flags:
 
-- `--output`: destination file (default `playlist.m3u`)
+- `--output`: destination file (default `output/playlist.m3u`)
 - `--base-url`: point at a Pixeldrain mirror or self-host
 - `--overwrite`: replace an existing playlist file
 - `--onepace`: interpret `source` as a One Pace watch page (or omit to use the default page)

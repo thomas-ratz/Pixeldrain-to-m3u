@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import Sequence
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,9 +12,7 @@ from bs4 import BeautifulSoup
 from .api import compose_download_url, extract_list_id, fetch_list_payload
 from .constants import (
     DEFAULT_ONEPACE_WATCH_URL,
-    DEFAULT_SERIES_GROUP,
     DEFAULT_SERIES_LOGO,
-    DEFAULT_SERIES_NAME,
 )
 from .log_utils import log
 from .playlist import PlaylistEntry
@@ -47,10 +45,10 @@ def fetch_watch_page(url: str = DEFAULT_ONEPACE_WATCH_URL) -> str:
     return response.text
 
 
-def parse_watch_page(html: str) -> List[OnePaceArc]:
+def parse_watch_page(html: str) -> list[OnePaceArc]:
     """Parse One Pace HTML into structured arc data."""
     soup = BeautifulSoup(html, "html.parser")
-    arcs: List[OnePaceArc] = []
+    arcs: list[OnePaceArc] = []
     for arc_li in soup.select("main ol > li"):
         heading = arc_li.find("h2")
         if not heading:
@@ -66,7 +64,7 @@ def parse_watch_page(html: str) -> List[OnePaceArc]:
     return arcs
 
 
-def _extract_english_subtitles(arc_li) -> List[OnePaceLink]:
+def _extract_english_subtitles(arc_li) -> list[OnePaceLink]:
     languages_container = arc_li.find("ul", class_=lambda c: c and "space-y-6" in c)
     if not languages_container:
         return []
@@ -81,7 +79,7 @@ def _extract_english_subtitles(arc_li) -> List[OnePaceLink]:
         link_ul = language_li.find("ul", class_=lambda c: c and "flex" in c)
         if not link_ul:
             continue
-        links: List[OnePaceLink] = []
+        links: list[OnePaceLink] = []
         for anchor in link_ul.find_all("a", href=True):
             href = anchor["href"]
             if "pixeldrain.net" not in href:

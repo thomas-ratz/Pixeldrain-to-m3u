@@ -129,8 +129,9 @@ def _coerce_duration(value: int) -> int:
 
 
 def _build_daterange_tag(*, entry_id: str, group: str, title: str, logo: str, sequence: int) -> str:
-    start_seconds = sequence
-    start_date = f"1970-01-01T00:00:{start_seconds:02d}Z"
+    hours, remainder = divmod(sequence, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    start_date = f"1970-01-01T{hours:02d}:{minutes:02d}:{seconds:02d}Z"
     parts = [
         f'ID="{entry_id}"',
         f'CLASS="{group or "One Pace"}"',

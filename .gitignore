@@ -12,7 +12,10 @@ venv/
 .ruff_cache/
 src/pixeldrain_m3u.egg-info/
 
+# Generated playlists
+output/*.m3u
+output/*.m3u8
+
 # Local files
-sample_romance.m3u
 *.log
 

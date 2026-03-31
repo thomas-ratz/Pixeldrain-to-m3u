@@ -29,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-o",
         "--output",
-        default="playlist.m3u",
+        default="output/playlist.m3u",
         help="Destination path for the generated playlist (default: %(default)s).",
     )
     parser.add_argument(
