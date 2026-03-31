@@ -13,7 +13,7 @@ venv/
 src/pixeldrain_m3u.egg-info/
 
 # Generated playlists
-output/*.m3u
+
 output/*.m3u8
 
 # Local files
