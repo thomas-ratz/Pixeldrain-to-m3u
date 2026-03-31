@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from .api import compose_download_url, extract_list_id, fetch_list_payload
 from .constants import (
     DEFAULT_ONEPACE_WATCH_URL,
+    DEFAULT_SERIES_GROUP,
     DEFAULT_SERIES_LOGO,
 )
 from .log_utils import log
@@ -126,7 +127,7 @@ def build_onepace_entries(
     arcs = parse_watch_page(html)
     entries: list[PlaylistEntry] = []
     series_prefix = (series_name or "One Pace").strip() or "One Pace"
-    group_value = (series_group or "One Pace").strip() or "One Pace"
+    group_value = (series_group or DEFAULT_SERIES_GROUP).strip() or DEFAULT_SERIES_GROUP
     logo_value = DEFAULT_SERIES_LOGO if series_logo is None else series_logo
 
     for season_index, arc in enumerate(arcs, start=1):
