@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Sequence
 
 from .api import compose_download_url, extract_list_id, fetch_list_payload, normalize_base_url
-from .constants import DEFAULT_SERIES_GROUP, DEFAULT_SERIES_LOGO, DEFAULT_SERIES_NAME
+from .constants import DEFAULT_SERIES_NAME
 from .log_utils import log
 from .onepace import build_onepace_entries
 from .playlist import PlaylistEntry, render_m3_playlist, render_m3u8_playlist, write_playlist
@@ -29,8 +29,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-o",
         "--output",
-        default="output/playlist.m3u",
-        help="Destination path for the generated playlist (default: %(default)s).",
+        default=None,
+        help="Destination playlist file (default: output/playlist.m3u, or output/onepace.m3u with --onepace).",
     )
     parser.add_argument(
         "--base-url",
@@ -68,7 +68,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--series-group",
         default=None,
-        help="(One Pace only) override the arc name used in group-title (defaults to each arc title).",
+        help="(One Pace only) force the same group-title on every arc (default: each arc's scraped title).",
     )
     parser.add_argument(
         "--series-logo",
@@ -87,6 +87,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv or sys.argv[1:])
     try:
+        if args.output is None:
+            args.output = "output/onepace.m3u" if args.onepace else "output/playlist.m3u"
+
         base_url = normalize_base_url(args.base_url)
         if args.onepace:
             entries = build_onepace_entries(
@@ -99,23 +102,31 @@ def main(argv: Sequence[str] | None = None) -> int:
                 tvg_prefix=args.tvg_prefix,
             )
             playlist_title = "One Pace – English Subtitles"
-        else:
-            if not args.source:
-                parser.error("source is required unless --onepace is supplied.")
-            list_id = extract_list_id(args.source)
-            payload = fetch_list_payload(list_id, base_url)
-            files = payload.get("files") or []
-            if not files:
-                raise RuntimeError(f"No files were found in Pixeldrain list '{list_id}'.")
-            playlist_title = payload.get("title")
-            entries = [
-                PlaylistEntry(
-                    title=file_info.get("name") or file_info["id"],
-                    url=compose_download_url(file_info["id"], base_url),
-                    duration=file_info.get("duration", -1),
-                )
-                for file_info in files
-            ]
+            if args.mode == "m3u8":
+                playlist_content = render_m3u8_playlist(entries, playlist_title)
+            else:
+                playlist_content = render_m3_playlist(entries, playlist_title)
+            destination = Path(args.output)
+            write_playlist(playlist_content, destination, args.overwrite)
+            log(f"Playlist created with {len(entries)} entries.")
+            return 0
+
+        if not args.source:
+            parser.error("source is required unless --onepace is supplied.")
+        list_id = extract_list_id(args.source)
+        payload = fetch_list_payload(list_id, base_url)
+        files = payload.get("files") or []
+        if not files:
+            raise RuntimeError(f"No files were found in Pixeldrain list '{list_id}'.")
+        playlist_title = payload.get("title")
+        entries = [
+            PlaylistEntry(
+                title=file_info.get("name") or file_info["id"],
+                url=compose_download_url(file_info["id"], base_url),
+                duration=file_info.get("duration", -1),
+            )
+            for file_info in files
+        ]
 
         if args.mode == "m3u8":
             playlist_content = render_m3u8_playlist(entries, playlist_title)

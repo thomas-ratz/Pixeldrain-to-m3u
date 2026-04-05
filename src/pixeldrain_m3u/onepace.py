@@ -10,11 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .api import compose_download_url, extract_list_id, fetch_list_payload
-from .constants import (
-    DEFAULT_ONEPACE_WATCH_URL,
-    DEFAULT_SERIES_GROUP,
-    DEFAULT_SERIES_LOGO,
-)
+from .constants import DEFAULT_ONEPACE_WATCH_URL, DEFAULT_SERIES_LOGO
 from .log_utils import log
 from .playlist import PlaylistEntry
 
@@ -111,6 +107,23 @@ def arc_matches_filters(title: str, filters: Sequence[str] | None) -> bool:
     return any(filt.lower() in lower_title for filt in filters)
 
 
+_SLUG_SAFE = re.compile(r"[^a-zA-Z0-9]+")
+
+
+def _arc_title_slug(arc_title: str) -> str:
+    slug = _SLUG_SAFE.sub("-", arc_title.strip().lower()).strip("-")
+    return slug or "arc"
+
+
+def sanitize_arc_filename(arc_title: str, extension: str) -> str:
+    """Build a filesystem-safe filename from a scraped arc (season) title."""
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", arc_title).strip().strip(".")
+    if not cleaned:
+        cleaned = "arc"
+    ext = extension if extension.startswith(".") else f".{extension}"
+    return f"{cleaned}{ext}"
+
+
 def build_onepace_entries(
     *,
     watch_url: str | None,
@@ -121,16 +134,15 @@ def build_onepace_entries(
     series_logo: str | None = None,
     tvg_prefix: str | None = None,
 ) -> list[PlaylistEntry]:
-    """Fetch arcs from One Pace and convert them into playlist entries."""
+    """Fetch arcs from One Pace into one playlist; each episode uses the arc title as IPTV group-title (series)."""
     resolved_watch_url = (watch_url or DEFAULT_ONEPACE_WATCH_URL).strip() or DEFAULT_ONEPACE_WATCH_URL
     html = fetch_watch_page(resolved_watch_url)
     arcs = parse_watch_page(html)
     entries: list[PlaylistEntry] = []
-    series_prefix = (series_name or "One Pace").strip() or "One Pace"
-    group_value = (series_group or DEFAULT_SERIES_GROUP).strip() or DEFAULT_SERIES_GROUP
+    series_prefix = (series_name or "").strip()
     logo_value = DEFAULT_SERIES_LOGO if series_logo is None else series_logo
 
-    for season_index, arc in enumerate(arcs, start=1):
+    for arc in arcs:
         if not arc_matches_filters(arc.title, arc_filters):
             continue
         best_link = select_best_quality(arc.english_subtitles)
@@ -145,18 +157,19 @@ def build_onepace_entries(
             log(f"Skipping arc '{arc.title}' (Pixeldrain list '{list_id}' empty)")
             continue
 
+        group_value = (series_group or arc.title).strip() or arc.title
         for episode_index, file_info in enumerate(files, start=1):
             file_name = file_info.get("name") or file_info.get("id")
             if not file_name:
                 continue
             url = compose_download_url(file_info["id"], base_url)
-            entry_title, attrs = format_series_metadata(
-                series_prefix=series_prefix,
+            entry_title, attrs = format_arc_episode_metadata(
+                arc_title=arc.title,
                 group_title=group_value,
                 tvg_logo=logo_value,
                 tvg_prefix=tvg_prefix,
-                season_index=season_index,
                 episode_index=episode_index,
+                series_prefix=series_prefix,
             )
             entries.append(PlaylistEntry(title=entry_title, url=url, attrs=attrs))
 
@@ -165,19 +178,21 @@ def build_onepace_entries(
     return entries
 
 
-def format_series_metadata(
+def format_arc_episode_metadata(
     *,
-    series_prefix: str,
+    arc_title: str,
     group_title: str,
     tvg_logo: str | None,
     tvg_prefix: str | None,
-    season_index: int,
     episode_index: int,
+    series_prefix: str = "",
 ) -> tuple[str, dict[str, str]]:
-    """Create IPTV-friendly metadata for a playlist entry."""
-    season_label = f"S{season_index:02d}"
+    """IPTV metadata for one episode; group-title is usually the scraped arc (season) name."""
     episode_label = f"E{episode_index:02d}"
-    tvg_title = f"{series_prefix} {season_label} {episode_label}"
+    if series_prefix:
+        tvg_title = f"{series_prefix} {arc_title} {episode_label}"
+    else:
+        tvg_title = f"{arc_title} {episode_label}"
 
     attrs: dict[str, str] = {
         "tvg-id": "",
@@ -186,6 +201,7 @@ def format_series_metadata(
         "group-title": group_title,
     }
     if tvg_prefix:
-        attrs["tvg-id"] = f"{tvg_prefix}{season_label}{episode_label}"
+        slug = _arc_title_slug(arc_title)
+        attrs["tvg-id"] = f"{tvg_prefix}{slug}-{episode_label}"
     return tvg_title, attrs
 

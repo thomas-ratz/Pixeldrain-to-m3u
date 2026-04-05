@@ -37,28 +37,32 @@ pixeldrain-m3u VmpS467P --overwrite
 
 ### One Pace auto-scrape
 
-```powershell
-# Grab every arc (best English-sub Pixeldrain link) and stitch into one playlist
-python -m pixeldrain_m3u --onepace https://onepace.net/en/watch --mode m3u -o output/onepace_all.m3u
+One combined playlist is written. Each episode’s **IPTV `group-title`** is the scraped arc name from the watch page (for example `Romance Dawn`), so apps that group by `group-title` show arcs as separate series or folders. Episode display names look like `Romance Dawn E01` (or `One Pace Romance Dawn E01` if you set `--series-name`).
 
-# Use defaults (One Pace watch URL) and limit to arcs containing "Wano" or "Dressrosa"
-pixeldrain-m3u --onepace --arc-filter Wano --arc-filter Dressrosa --mode m3u8 -o output/favorites.m3u8
+```powershell
+# Default output: output/onepace.m3u
+python -m pixeldrain_m3u --onepace https://onepace.net/en/watch --mode m3u --overwrite
+
+# Limit to arcs whose titles contain "Wano" or "Dressrosa"
+pixeldrain-m3u --onepace --arc-filter Wano --arc-filter Dressrosa --mode m3u8 -o output/favorites.m3u8 --overwrite
 ```
 
 Key flags:
 
-- `--output`: destination file (default `output/playlist.m3u`)
+- `--output`: defaults to `output/playlist.m3u`, or `output/onepace.m3u` with `--onepace`
 - `--base-url`: point at a Pixeldrain mirror or self-host
 - `--overwrite`: replace an existing playlist file
 - `--onepace`: interpret `source` as a One Pace watch page (or omit to use the default page)
 - `--arc-filter`: repeatable filter that keeps arcs whose title contains the provided text
 - `--mode`: `m3u` (default) for extended M3U, `m3u8` for a VOD-style HLS manifest
-- `--series-name`: optional prefix for episode titles (default `One Pace`, producing `One Pace S01 E01`)
-- `--series-group`: override the IPTV `group-title` value (default `One Pace`)
+- `--series-name`: optional prefix for episode display names (default empty; e.g. `One Pace` → `One Pace Romance Dawn E01`)
+- `--series-group`: force the same IPTV `group-title` on every arc (default: each arc’s scraped title)
 - `--series-logo`: override the default One Piece logo used for `tvg-logo`
 - `--tvg-prefix`: assign deterministic `tvg-id`s, e.g. `--tvg-prefix onepace-`
 
-You can pass a raw list ID instead of a full Pixeldrain URL, and the CLI honors `PIXELDRAIN_BASE_URL` so you can globally override the domain. In One Pace mode, each playlist entry follows the IPTV series pattern (`tvg-id="" tvg-name="One Pace S01 E01" tvg-logo="<One Piece logo>" group-title="One Pace"`) so players classify it as VOD, and the `m3u8` mode mirrors the same metadata using standard HLS tags (`#EXTINF`, `#EXT-X-DATERANGE`, etc.).
+You can pass a raw list ID instead of a full Pixeldrain URL, and the CLI honors `PIXELDRAIN_BASE_URL` so you can globally override the domain. In One Pace mode, the overall playlist title stays **One Pace – English Subtitles**; per-line metadata uses the arc name in `group-title` and `tvg-name` so players and IPTV tools can split the library by arc. The default One Piece image is used for `tvg-logo` unless you pass `--series-logo`.
+
+**Xtream Codes / IPTV panels:** this tool outputs a static M3U/M3U8 file, not the Xtream Codes HTTP API (`player_api.php`). Many apps read M3U VOD lines and use `group-title` as the category or series name—host the generated file over HTTP(S) and add that URL as an M3U source, or import the M3U into a panel that maps groups to VOD categories. Full Xtream-style VOD listing requires panel software that exposes that API.
 
 ## Tests
 
