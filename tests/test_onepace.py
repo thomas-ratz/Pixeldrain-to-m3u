@@ -1,7 +1,9 @@
 from pixeldrain_m3u.onepace import (
     OnePaceLink,
-    format_series_metadata,
+    build_onepace_entries,
+    format_arc_episode_metadata,
     parse_watch_page,
+    sanitize_arc_filename,
     select_best_quality,
 )
 
@@ -60,35 +62,66 @@ def test_select_best_quality_prefers_highest_resolution():
     assert best.href.endswith("CCC")
 
 
-def test_format_series_metadata_builds_tvg_fields():
-    title, attrs = format_series_metadata(
-        series_prefix="One Pace",
-        group_title="One Pace",
+def test_format_arc_episode_metadata_builds_tvg_fields():
+    title, attrs = format_arc_episode_metadata(
+        arc_title="Romance Dawn",
+        group_title="Romance Dawn",
         tvg_logo="http://logo.png",
         tvg_prefix="onepace-",
-        season_index=1,
         episode_index=3,
+        series_prefix="One Pace",
     )
 
-    assert title == "One Pace S01 E03"
-    assert attrs["group-title"] == "One Pace"
-    assert attrs["tvg-name"] == "One Pace S01 E03"
+    assert title == "One Pace Romance Dawn E03"
+    assert attrs["group-title"] == "Romance Dawn"
+    assert attrs["tvg-name"] == "One Pace Romance Dawn E03"
     assert attrs["tvg-logo"] == "http://logo.png"
-    assert attrs["tvg-id"] == "onepace-S01E03"
+    assert attrs["tvg-id"] == "onepace-romance-dawn-E03"
 
 
-def test_format_series_metadata_allows_prefix():
-    title, attrs = format_series_metadata(
-        series_prefix="Custom",
-        group_title="Custom",
+def test_format_arc_episode_metadata_without_prefix():
+    title, attrs = format_arc_episode_metadata(
+        arc_title="Romance Dawn",
+        group_title="Romance Dawn",
         tvg_logo=None,
         tvg_prefix=None,
-        season_index=2,
         episode_index=1,
+        series_prefix="",
     )
 
-    assert title == "Custom S02 E01"
-    assert attrs["tvg-name"] == "Custom S02 E01"
-    assert attrs["group-title"] == "Custom"
+    assert title == "Romance Dawn E01"
+    assert attrs["tvg-name"] == "Romance Dawn E01"
+    assert attrs["group-title"] == "Romance Dawn"
     assert attrs["tvg-id"] == ""
+
+
+def test_sanitize_arc_filename_strips_invalid_chars():
+    assert sanitize_arc_filename('A/B:C', ".m3u") == "A_B_C.m3u"
+
+
+def test_build_onepace_entries_sets_group_title_per_arc(monkeypatch):
+    monkeypatch.setattr(
+        "pixeldrain_m3u.onepace.fetch_watch_page",
+        lambda _url: SAMPLE_HTML,
+    )
+    monkeypatch.setattr(
+        "pixeldrain_m3u.onepace.fetch_list_payload",
+        lambda _list_id, _base: {
+            "files": [
+                {"id": "f1", "name": "a.mkv"},
+                {"id": "f2", "name": "b.mkv"},
+            ]
+        },
+    )
+
+    entries = build_onepace_entries(
+        watch_url="https://example.invalid/watch",
+        base_url="https://pixeldrain.net",
+    )
+
+    assert len(entries) == 2
+    assert entries[0].title == "Romance Dawn E01"
+    assert entries[0].attrs is not None
+    assert entries[0].attrs["group-title"] == "Romance Dawn"
+    assert "f1" in entries[0].url
 
